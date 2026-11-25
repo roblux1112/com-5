@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบฐานข้อมูลคอมพิวเตอร์ 32 เครื่อง</title>
+<style>
+:root{
+  --primary:#2563eb;--primary-dark:#1e40af;--bg:#f1f5f9;
+  --text:#1e293b;--muted:#64748b;--border:#e2e8f0;
+  --green:#16a34a;--orange:#d97706;--red:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Tahoma",sans-serif}
+header{background:linear-gradient(120deg,#172554,#2563eb);color:#fff;padding:28px 20px}
+.header-inner,.container{max-width:1450px;margin:auto}
+header h1{margin:0;font-size:26px}
+header p{margin:9px 0 0;color:#dbeafe}
+.container{padding:24px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:22px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:0 3px 12px #0f172a0b}
+.stat span{color:var(--muted);font-size:13px}
+.stat strong{display:block;font-size:28px;margin-top:9px}
+.stat.green strong{color:var(--green)}.stat.orange strong{color:var(--orange)}.stat.red strong{color:var(--red)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.view-switch{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.view-switch button{background:#e2e8f0;color:#334155}
+.view-switch button.active{background:#1d4ed8;color:#fff}
+.detail-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.detail-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px;cursor:pointer;text-align:left}
+.detail-card:hover{border-color:#93c5fd;box-shadow:0 5px 15px #0f172a10}
+.detail-card h3{margin:0 0 9px;font-size:15px}
+.detail-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;font-size:12px;color:var(--muted)}
+.detail-meta strong{color:var(--text)}
+input,select,textarea{font:inherit;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;width:100%;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:3px solid #bfdbfe;border-color:var(--primary)}
+.toolbar input{max-width:330px;flex:1 1 220px}
+.toolbar select{max-width:190px}
+button{border:0;border-radius:9px;padding:11px 16px;cursor:pointer;font-weight:bold;font:inherit;transition:.15s}
+button:hover{filter:brightness(.96);transform:translateY(-1px)}
+button:focus-visible,.pc:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.primary{background:var(--primary);color:#fff}.secondary{background:#e2e8f0;color:#334155}
+.success{background:#dcfce7;color:#166534}.danger{background:#fee2e2;color:#b91c1c}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0 13px}
+.section-title h2{font-size:19px;margin:0}
+.section-title span{font-size:12px;color:var(--muted)}
+.row-label{font-size:12px;color:var(--muted);margin:20px 0 9px;font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}
+.pc{background:#fff;border:1px solid var(--border);border-radius:14px;padding:13px 8px;text-align:center;cursor:pointer;transition:.2s;box-shadow:0 2px 7px #0f172a08;min-width:0}
+.pc:hover{transform:translateY(-3px);box-shadow:0 8px 20px #0f172a12;border-color:#93c5fd}
+.pc-icon{width:43px;height:39px;margin:0 auto 8px;border-radius:10px;background:#eff6ff;display:grid;place-items:center;font-size:23px}
+.pc-name{font-size:14px;font-weight:bold}
+.pc-status{margin-top:9px;display:inline-block;padding:5px 7px;border-radius:20px;font-size:10px;font-weight:bold;white-space:nowrap}
+.pc-status.ready{background:#dcfce7;color:#15803d}.pc-status.check{background:#fef3c7;color:#b45309}
+.pc-status.broken{background:#fee2e2;color:#b91c1c}
+.pc-detail{font-size:10px;color:#94a3b8;margin-top:7px;overflow-wrap:anywhere}
+.empty-result{background:#fff;border:1px dashed #cbd5e1;padding:25px;text-align:center;border-radius:12px;color:var(--muted);margin-top:12px}
+.footer{color:#94a3b8;text-align:center;font-size:12px;padding:30px}
+.modal-bg{display:none;position:fixed;inset:0;background:#0f172a99;z-index:10;align-items:center;justify-content:center;padding:15px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;width:100%;max-width:680px;max-height:92vh;overflow:auto;border-radius:17px;padding:23px;box-shadow:0 20px 60px #0003}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px}
+.modal-head h2{margin:0;font-size:21px}
+.close{font-size:23px;background:#f1f5f9;padding:5px 12px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px}
+.field.full{grid-column:1/-1}
+.modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px;justify-content:flex-end}
+#fileInput{display:none}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){
+ .container{padding:14px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+ .pc{padding:11px 3px}.pc-name{font-size:12px}.pc-status{font-size:9px}
+ .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+ .detail-list{grid-template-columns:1fr}
+ header h1{font-size:21px}.section-title{align-items:flex-start;flex-direction:column}
+ .modal{padding:17px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <h1>🖥️ ระบบฐานข้อมูลคอมพิวเตอร์</h1>
+    <p>ระบบจัดการและตรวจสอบข้อมูลคอมพิวเตอร์ภายในห้อง จำนวน 32 เครื่อง</p>
+  </div>
+</header>
+
+<main class="container">
+  <section class="stats" aria-label="สรุปสถานะคอมพิวเตอร์">
+    <div class="stat"><span>คอมพิวเตอร์ทั้งหมด</span><strong id="total">32</strong></div>
+    <div class="stat green"><span>พร้อมใช้งาน</span><strong id="ready">0</strong></div>
+    <div class="stat orange"><span>รอตรวจสอบ</span><strong id="check">32</strong></div>
+    <div class="stat red"><span>ชำรุด</span><strong id="broken">0</strong></div>
+  </section>
+
+  <section class="toolbar" aria-label="เครื่องมือจัดการข้อมูล">
+    <input id="search" type="search" placeholder="🔍 ค้นหา COM, CPU, RAM หรือรายละเอียด..." aria-label="ค้นหาคอมพิวเตอร์">
+    <select id="filter" aria-label="กรองตามสถานะ">
+      <option value="all">ทุกสถานะ</option>
+      <option value="ready">พร้อมใช้งาน</option>
+      <option value="check">รอตรวจสอบ</option>
+      <option value="broken">ชำรุด</option>
+    </select>
+    <button class="success" id="exportBtn" type="button">↓ สำรองข้อมูล</button>
+    <button class="secondary" id="importBtn" type="button">↑ นำเข้าข้อมูล</button>
+    <input type="file" id="fileInput" accept=".json,application/json">
+  </section>
+
+  <div class="view-switch" role="group" aria-label="เลือกรูปแบบการแสดงผล">
+    <button type="button" id="layoutViewBtn" class="active" aria-pressed="true">▦ ดูผังโต๊ะ</button>
+    <button type="button" id="detailViewBtn" aria-pressed="false">☷ ดูแบบรายละเอียด</button>
+  </div>
+
+  <div class="section-title">
+    <h2 id="viewHeading">แผนผังโต๊ะคอมพิวเตอร์</h2>
+    <span id="viewDescription">คลิกที่เครื่องเพื่อดูหรือแก้ไขรายละเอียด</span>
+  </div>
+  <div id="computerGrid"></div>
+  <div class="footer">ระบบฐานข้อมูลคอมพิวเตอร์ 32 เครื่อง | บันทึกข้อมูลไว้ในเบราว์เซอร์ของอุปกรณ์นี้</div>
+</main>
+
+<div class="modal-bg" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">🖥️ COM 01</h2>
+      <button class="close" id="closeBtn" type="button" aria-label="ปิดหน้าต่าง">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="field full">
+        <label for="status">สถานะเครื่อง</label>
+        <select id="status">
+          <option value="check">🟠 รอตรวจสอบ</option>
+          <option value="ready">🟢 พร้อมใช้งาน</option>
+          <option value="broken">🔴 ชำรุด</option>
+        </select>
+      </div>
+      <div class="field"><label for="cpu">CPU</label><input id="cpu" placeholder="เช่น Intel Core i5"></div>
+      <div class="field"><label for="ram">RAM</label><input id="ram" placeholder="เช่น 8 GB DDR4"></div>
+      <div class="field"><label for="ssd">SSD</label><input id="ssd" placeholder="เช่น 256 GB"></div>
+      <div class="field"><label for="hdd">HDD</label><input id="hdd" placeholder="เช่น 1 TB"></div>
+      <div class="field"><label for="mouse">เมาส์ (Mouse)</label><input id="mouse" placeholder="เช่น ใช้งานได้"></div>
+      <div class="field"><label for="monitor">จอภาพ (Monitor)</label><input id="monitor" placeholder="เช่น Acer 19 นิ้ว"></div>
+      <div class="field"><label for="keyboard">คีย์บอร์ด (Keyboard)</label><input id="keyboard" placeholder="เช่น ใช้งานได้"></div>
+      <div class="field"><label for="office">Microsoft Office</label><input id="office" placeholder="เช่น Office 2021"></div>
+      <div class="field full"><label for="details">รายละเอียดเพิ่มเติม / อาการเสีย</label><textarea id="details" rows="3" placeholder="บันทึกรายละเอียดของเครื่อง..."></textarea></div>
+    </div>
+    <p class="hint">เมื่อกดบันทึก ระบบจะจัดเก็บข้อมูลไว้ในเบราว์เซอร์เครื่องนี้โดยอัตโนมัติ</p>
+    <div class="modal-actions">
+      <button class="secondary" id="cancelBtn" type="button">ยกเลิก</button>
+      <button class="primary" id="saveBtn" type="button">บันทึกข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "computer_room_32_v2";
+const LEGACY_STORAGE_KEY = "computer_room_32_v1";
+const FIELD_IDS = ["status","cpu","ram","ssd","hdd","mouse","monitor","keyboard","office","details"];
+const STATUS_TEXT = {ready:"พร้อมใช้งาน",check:"รอตรวจสอบ",broken:"ชำรุด"};
+let computers = [];
+let selectedId = null;
+let currentView = "layout";
+
+const $ = id => document.getElementById(id);
+const blankComputer = id => ({
+  id, status:"check", cpu:"", ram:"", ssd:"", hdd:"",
+  mouse:"", monitor:"", keyboard:"", office:"", details:""
+});
+
+function normalizeComputer(pc, id) {
+  const clean = blankComputer(id);
+  if (!pc || typeof pc !== "object") return clean;
+  clean.status = ["ready","check","broken"].includes(pc.status) ? pc.status : "check";
+  for (const key of FIELD_IDS) {
+    if (key !== "status") clean[key] = typeof pc[key] === "string" ? pc[key] : "";
+  }
+  return clean;
+}
+
+function loadData() {
+  try {
+    let saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      // รองรับข้อมูลจากเวอร์ชันเดิม เพื่อไม่ให้ข้อมูลเก่าหายหลังอัปเดต
+      saved = localStorage.getItem(LEGACY_STORAGE_KEY);
+    }
+    const parsed = saved ? JSON.parse(saved) : [];
+    computers = Array.from({length:32}, (_, i) => normalizeComputer(parsed[i], i + 1));
+    saveStorage();
+  } catch (error) {
+    computers = Array.from({length:32}, (_, i) => blankComputer(i + 1));
+    saveStorage();
+    console.error("ไม่สามารถอ่านข้อมูลเดิมได้:", error);
+  }
+}
+
+function saveStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(computers));
+    updateStats();
+  } catch (error) {
+    alert("ไม่สามารถบันทึกข้อมูลได้ พื้นที่จัดเก็บของเบราว์เซอร์อาจเต็มหรือถูกปิดใช้งาน");
+    console.error(error);
+  }
+}
+
+function updateStats() {
+  const count = status => computers.filter(pc => pc.status === status).length;
+  $("total").textContent = computers.length;
+  $("ready").textContent = count("ready");
+  $("check").textContent = count("check");
+  $("broken").textContent = count("broken");
+}
+
+function render() {
+  const grid = $("computerGrid");
+  const query = $("search").value.trim().toLocaleLowerCase();
+  const filter = $("filter").value;
+  grid.innerHTML = "";
+
+  const visible = computers.filter(pc => {
+    const name = `COM ${String(pc.id).padStart(2,"0")}`;
+    const searchable = [name, pc.cpu, pc.ram, pc.ssd, pc.hdd, pc.mouse, pc.monitor, pc.keyboard, pc.office, pc.details]
+      .join(" ").toLocaleLowerCase();
+    return searchable.includes(query) && (filter === "all" || pc.status === filter);
+  });
+
+  if (currentView === "detail") {
+    const list = document.createElement("div");
+    list.className = "detail-list";
+    visible.forEach(pc => {
+      const name = `COM ${String(pc.id).padStart(2,"0")}`;
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "detail-card";
+      card.innerHTML = `
+        <h3>🖥️ ${name} <span class="pc-status ${pc.status}">${STATUS_TEXT[pc.status]}</span></h3>
+        <div class="detail-meta">
+          <div>CPU: <strong>${escapeHTML(pc.cpu || "-")}</strong></div>
+          <div>RAM: <strong>${escapeHTML(pc.ram || "-")}</strong></div>
+          <div>SSD: <strong>${escapeHTML(pc.ssd || "-")}</strong></div>
+          <div>HDD: <strong>${escapeHTML(pc.hdd || "-")}</strong></div>
+          <div>เมาส์: <strong>${escapeHTML(pc.mouse || "-")}</strong></div>
+          <div>จอภาพ: <strong>${escapeHTML(pc.monitor || "-")}</strong></div>
+          <div>คีย์บอร์ด: <strong>${escapeHTML(pc.keyboard || "-")}</strong></div>
+          <div>Office: <strong>${escapeHTML(pc.office || "-")}</strong></div>
+        </div>
+        ${pc.details ? `<p class="hint">รายละเอียด: ${escapeHTML(pc.details)}</p>` : ""}`;
+      card.addEventListener("click", () => openModal(pc.id));
+      list.appendChild(card);
+    });
+    grid.appendChild(list);
+  } else {
+    for (let row = 0; row < 4; row++) {
+      const rowLabel = document.createElement("div");
+      rowLabel.className = "row-label";
+      rowLabel.textContent = `แถวที่ ${row + 1} · COM ${String(row * 8 + 1).padStart(2,"0")} - ${String(row * 8 + 8).padStart(2,"0")}`;
+      grid.appendChild(rowLabel);
+
+      const rowGrid = document.createElement("div");
+      rowGrid.className = "grid";
+      for (let col = 0; col < 8; col++) {
+        const id = row * 8 + col + 1;
+        const pc = computers[id - 1];
+        const name = `COM ${String(id).padStart(2,"0")}`;
+        const searchable = [name, pc.cpu, pc.ram, pc.ssd, pc.hdd, pc.mouse, pc.monitor, pc.keyboard, pc.office, pc.details]
+          .join(" ").toLocaleLowerCase();
+        const matches = searchable.includes(query) && (filter === "all" || pc.status === filter);
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "pc";
+        card.style.display = matches ? "block" : "none";
+        card.setAttribute("aria-label", `${name} สถานะ${STATUS_TEXT[pc.status]}`);
+        card.innerHTML = `
+          <div class="pc-icon" aria-hidden="true">🖥️</div>
+          <div class="pc-name">${name}</div>
+          <div class="pc-status ${pc.status}">${STATUS_TEXT[pc.status]}</div>
+          <div class="pc-detail">${pc.cpu ? escapeHTML(pc.cpu) : "ยังไม่มีข้อมูล"}</div>`;
+        card.addEventListener("click", () => openModal(id));
+        rowGrid.appendChild(card);
+      }
+      grid.appendChild(rowGrid);
+    }
+  }
+
+  if (visible.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-result";
+    empty.textContent = "ไม่พบคอมพิวเตอร์ที่ตรงกับคำค้นหาหรือสถานะที่เลือก";
+    grid.appendChild(empty);
+  }
+}
+
+function setView(view) {
+  currentView = view;
+  const isLayout = view === "layout";
+  $("layoutViewBtn").classList.toggle("active", isLayout);
+  $("detailViewBtn").classList.toggle("active", !isLayout);
+  $("layoutViewBtn").setAttribute("aria-pressed", String(isLayout));
+  $("detailViewBtn").setAttribute("aria-pressed", String(!isLayout));
+  $("viewHeading").textContent = isLayout ? "แผนผังโต๊ะคอมพิวเตอร์" : "รายละเอียดคอมพิวเตอร์ทั้ง 32 เครื่อง";
+  $("viewDescription").textContent = isLayout
+    ? "แสดงตำแหน่งคอมพิวเตอร์แยกตามแถว คลิกเพื่อแก้ไขข้อมูล"
+    : "แสดงข้อมูลอุปกรณ์ของแต่ละเครื่อง คลิกการ์ดเพื่อแก้ไขรายละเอียด";
+  render();
+}
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  })[char]);
+}
+
+function openModal(id) {
+  selectedId = id;
+  const pc = computers[id - 1];
+  $("modalTitle").textContent = `🖥️ COM ${String(id).padStart(2,"0")}`;
+  for (const key of FIELD_IDS) $(key).value = pc[key] || "";
+  $("modal").classList.add("show");
+  $("status").focus();
+}
+
+function closeModal() {
+  $("modal").classList.remove("show");
+  selectedId = null;
+}
+
+function savePC() {
+  if (selectedId === null) return;
+  const pc = computers[selectedId - 1];
+  for (const key of FIELD_IDS) pc[key] = $(key).value.trim();
+  saveStorage();
+  render();
+  closeModal();
+  alert("บันทึกข้อมูลเรียบร้อยแล้ว");
+}
+
+function exportData() {
+  const data = JSON.stringify(computers, null, 2);
+  const blob = new Blob([data], {type:"application/json;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "computer-room-backup.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function importData(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!Array.isArray(data) || data.length !== 32) {
+        throw new Error("รูปแบบข้อมูลไม่ถูกต้อง");
+      }
+      if (!confirm("ต้องการนำเข้าข้อมูล 32 เครื่องและแทนที่ข้อมูลเดิมหรือไม่?")) return;
+      computers = data.map((pc, index) => normalizeComputer(pc, index + 1));
+      saveStorage();
+      render();
+      alert("นำเข้าข้อมูลเรียบร้อยแล้ว");
+    } catch (error) {
+      alert("ไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์สำรองข้อมูล JSON ของระบบนี้");
+    } finally {
+      event.target.value = "";
+    }
+  };
+  reader.onerror = () => {
+    alert("ไม่สามารถอ่านไฟล์ได้");
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
+
+$("layoutViewBtn").addEventListener("click", () => setView("layout"));
+$("detailViewBtn").addEventListener("click", () => setView("detail"));
+$("search").addEventListener("input", render);
+$("filter").addEventListener("change", render);
+$("exportBtn").addEventListener("click", exportData);
+$("importBtn").addEventListener("click", () => $("fileInput").click());
+$("fileInput").addEventListener("change", importData);
+$("saveBtn").addEventListener("click", savePC);
+$("closeBtn").addEventListener("click", closeModal);
+$("cancelBtn").addEventListener("click", closeModal);
+$("modal").addEventListener("click", event => {
+  if (event.target === $("modal")) closeModal();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && $("modal").classList.contains("show")) closeModal();
+});
+
+loadData();
+render();
+</script>
+</body>
+</html>
